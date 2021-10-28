@@ -10,3 +10,5 @@ It took about 90 minutes.
 $ cargo run -- ./path/to/example.config
 [spits JSON to stdout]
 ```
+
+You can see an example of [the input](./example.config) and [the output](./example.config.out.json) :)
