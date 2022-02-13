@@ -20,11 +20,11 @@ pub fn convert_to_json(document: Vec<Block>) -> String {
             }
             Expression::Map(pairs) => {
                 format!(
-                    "[ {} ]",
+                    "{{ {} }}",
                     pairs
                         .into_iter()
                         .map(|block| {
-                            format!("{{ \"{}\": {} }}", block.key, convert_expr(block.value))
+                            format!("\"{}\": {}", block.key, convert_expr(block.value))
                         })
                         .collect::<Vec<_>>()
                         .join(", ")
