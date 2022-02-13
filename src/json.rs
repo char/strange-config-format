@@ -3,6 +3,10 @@ use crate::ast::*;
 pub fn convert_to_json(document: Vec<Block>) -> String {
     fn convert_expr(expr: Expression) -> String {
         match expr {
+            Expression::Nil => String::from("null"),
+            Expression::Boolean(b) => {
+                format!("{}", b)
+            }
             Expression::String(content) => format!("\"{}\"", content),
             Expression::Array(a) => format!(
                 "[{}]",
@@ -14,8 +18,17 @@ pub fn convert_to_json(document: Vec<Block>) -> String {
             Expression::Block(block) => {
                 format!("{{ \"{}\": {} }}", block.key, convert_expr(block.value))
             }
-            Expression::Boolean(b) => {
-                format!("{}", b)
+            Expression::Map(pairs) => {
+                format!(
+                    "{{ {} }}",
+                    pairs
+                        .into_iter()
+                        .map(|block| {
+                            format!("\"{}\": {}", block.key, convert_expr(block.value))
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
             }
         }
     }

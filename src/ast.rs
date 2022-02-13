@@ -1,9 +1,11 @@
 #[derive(Debug)]
 pub enum Expression {
+    Nil,
+    Boolean(bool),
     String(String),
     Array(Vec<Expression>),
     Block(Box<Block>),
-    Boolean(bool),
+    Map(Vec<Block>),
 }
 
 #[derive(Debug)]

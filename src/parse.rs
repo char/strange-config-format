@@ -15,6 +15,15 @@ fn skip_whitespace(input: &str) -> IResult<&str, ()> {
     Ok((input, ()))
 }
 
+fn nil(input: &str) -> IResult<&str, Expression> {
+    let (input, _) = tag("nil")(input)?;
+    Ok((input, Expression::Nil))
+}
+
+fn boolean(input: &str) -> IResult<&str, bool> {
+    alt((map(tag("true"), |_| true), map(tag("false"), |_| false)))(input)
+}
+
 fn string(input: &str) -> IResult<&str, String> {
     let (input, _) = tag("<<\"")(input)?;
     let (input, content) = is_not("\"")(input)?;
@@ -30,7 +39,7 @@ fn block(input: &str) -> IResult<&str, Block> {
     let (input, _) = char(',')(input)?;
     let (input, _) = skip_whitespace(input)?;
     let (input, expr) = any_expr(input)?;
-    let (input, _) = tag("}")(input)?;
+    let (input, _) = char('}')(input)?;
 
     Ok((
         input,
@@ -65,14 +74,38 @@ fn array(input: &str) -> IResult<&str, Vec<Expression>> {
     delimited(char('['), separated_list0(array_sep, any_expr), char(']'))(input)
 }
 
-fn boolean(input: &str) -> IResult<&str, bool> {
-    alt((map(tag("true"), |_| true), map(tag("false"), |_| false)))(input)
+fn hash_map(input: &str) -> IResult<&str, Vec<Block>> {
+    fn key_pair(input: &str) -> IResult<&str, Block> {
+        let (input, key) = string(input)?;
+        let (input, _) = skip_whitespace(input)?;
+        let (input, _) = tag("=>")(input)?;
+        let (input, _) = skip_whitespace(input)?;
+        let (input, value) = any_expr(input)?;
+        Ok((input, Block { key, value }))
+    }
+
+    fn map_sep(input: &str) -> IResult<&str, ()> {
+        let (input, _) = char(',')(input)?;
+        let (input, _) = skip_whitespace(input)?;
+        Ok((input, ()))
+    }
+
+    delimited(tag("#{"), separated_list0(map_sep, key_pair), char('}'))(input)
 }
 
 fn any_expr(input: &str) -> IResult<&str, Expression> {
+    let bool_expr = map(boolean, Expression::Boolean);
     let string_expr = map(string, Expression::String);
     let array_expr = map(array, Expression::Array);
     let block_expr = map(block, |b| Expression::Block(Box::new(b)));
-    let bool_expr = map(boolean, Expression::Boolean);
-    alt((string_expr, array_expr, block_expr, bool_expr))(input)
+    let map_expr = map(hash_map, |b| Expression::Map(b));
+
+    alt((
+        nil,
+        bool_expr,
+        string_expr,
+        array_expr,
+        block_expr,
+        map_expr,
+    ))(input)
 }
