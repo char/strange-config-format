@@ -98,7 +98,7 @@ fn any_expr(input: &str) -> IResult<&str, Expression> {
     let string_expr = map(string, Expression::String);
     let array_expr = map(array, Expression::Array);
     let block_expr = map(block, |b| Expression::Block(Box::new(b)));
-    let map_expr = map(hash_map, |b| Expression::Map(b));
+    let map_expr = map(hash_map, Expression::Map);
 
     alt((
         nil,
